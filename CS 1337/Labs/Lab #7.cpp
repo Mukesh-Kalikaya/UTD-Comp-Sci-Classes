@@ -25,7 +25,7 @@ int main() {
     ifstream inputFile;
 
     // Get filename from user
-    cout << "Enter input file: ";
+    cout << "Enter input file:";
     cin >> filename;
     cout << endl;
 
@@ -40,7 +40,7 @@ int main() {
 
     // Print header with filename
     cout << "Checking " << filename << endl;
-    for (int i = 0; i < filename.length() + 10; i++) {
+    for (int i = 0; i < filename.length() + 9; i++) {
         cout << "-";
     }
     cout << endl << endl;
