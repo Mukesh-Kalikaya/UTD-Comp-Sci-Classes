@@ -23,10 +23,16 @@ true. If the condition is not met, no withdrawal is made and the
 function returns false. The date parameter is a placeholder for the
 extra credit version and is not used here. */
 bool PremiumAccount::withdraw(double amnt, Date d) {
-    (void)d;
     // Check if the balance will remain at or above the minimum after withdrawal
     if (balance >= amnt + MIN_BALANCE) {
         balance -= amnt;
+#ifdef EXTRA_CREDIT
+        Transaction t;
+        t.date = d;
+        t.transactionType = 2;
+        t.amount = amnt;
+        recordTransaction(t);
+#endif
         return true;
     }
     return false;

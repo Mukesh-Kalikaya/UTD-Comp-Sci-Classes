@@ -26,7 +26,7 @@ void Date::print() const {
     cout << monthNames[month] << " " << setfill('0') << setw(2) << day
          << ", " << year << ", " << setw(2) << hour << ":00";
 
-    // Reset the fill character back to a space after printing
+    // Reset fill character to avoid impacting subsequent output.
     cout << setfill(' ');
 }
 

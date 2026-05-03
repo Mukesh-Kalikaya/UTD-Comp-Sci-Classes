@@ -23,6 +23,16 @@ Account::Account(string nam, double bal, Date d) {
     numberAccounts++;
     transactionHistory = nullptr;
     numberTransactions = 0;
+
+#ifdef EXTRA_CREDIT
+    Transaction t;
+    t.date = d;
+    t.transactionType = 0;
+    t.amount = bal;
+    recordTransaction(t);
+#else
+    (void)d; // date is a placeholder for the basic version
+#endif
 }
 
 /* This function checks if there is enough balance to cover the withdrawal
@@ -34,8 +44,20 @@ bool Account::withdraw(double amount, Date d) {
     // Check if the balance is enough to cover the withdrawal
     if (balance >= amount) {
         balance -= amount;
+#ifdef EXTRA_CREDIT
+        Transaction t;
+        t.date = d;
+        t.transactionType = 2;
+        t.amount = amount;
+        recordTransaction(t);
+#else
+        (void)d;
+#endif
         return true;
     }
+#ifndef EXTRA_CREDIT
+    (void)d;
+#endif
     return false;
 }
 
@@ -48,8 +70,20 @@ bool Account::deposit(double amount, Date d) {
     // Check if the deposit amount is a positive value
     if (amount > 0) {
         balance += amount;
+#ifdef EXTRA_CREDIT
+        Transaction t;
+        t.date = d;
+        t.transactionType = 1;
+        t.amount = amount;
+        recordTransaction(t);
+#else
+        (void)d;
+#endif
         return true;
     }
+#ifndef EXTRA_CREDIT
+    (void)d;
+#endif
     return false;
 }
 
@@ -77,3 +111,62 @@ void Account::print() const {
          << ", Name: " << ownerName
          << ", Balance: " << balance << " Galactic units" << endl;
 }
+
+#ifdef EXTRA_CREDIT
+void Account::recordTransaction(Transaction t) {
+    Transaction *newHistory = new Transaction[numberTransactions + 1];
+
+    for (int i = 0; i < numberTransactions; i++) {
+        newHistory[i] = transactionHistory[i];
+    }
+
+    newHistory[numberTransactions] = t;
+
+    delete [] transactionHistory;
+    transactionHistory = newHistory;
+    numberTransactions++;
+}
+
+void Account::printTransactions() const {
+    static const string monthNames[] = {
+        "", "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    };
+
+    cout << "Transaction history:" << endl;
+    cout << "-------------------" << endl;
+
+    double runningBalance = 0.0;
+    cout << fixed << setprecision(2);
+    for (int i = 0; i < numberTransactions; i++) {
+        const Transaction &t = transactionHistory[i];
+
+        if (t.transactionType == 2) {
+            runningBalance -= t.amount;
+        }
+        else {
+            runningBalance += t.amount;
+        }
+
+        cout << "Date: "
+             << monthNames[t.date.getMonth()] << " "
+             << t.date.getDay() << ", "
+             << t.date.getYear() << ", "
+             << t.date.getHour() << ":00"
+             << ", Amount: " << t.amount
+             << ", type: ";
+
+        if (t.transactionType == 0) {
+            cout << "Creation";
+        }
+        else if (t.transactionType == 1) {
+            cout << "Deposit";
+        }
+        else {
+            cout << "Withdrawal";
+        }
+
+        cout << ", New balance: " << runningBalance << endl;
+    }
+}
+#endif
