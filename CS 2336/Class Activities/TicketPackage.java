@@ -8,7 +8,7 @@ public class TicketPackage
     public static void main(String[] args) 
     {
         // Define variables
-        Scanner input = new Scanner(System.in);
+        try (Scanner input = new Scanner(System.in)) {
         int age, height, price;
         char zone;
         String ticketType;
@@ -49,5 +49,6 @@ public class TicketPackage
         // Output the ticket type and the final cost to the user
         System.out.println("\nTicket Type: " + ticketType);
         System.out.println("Final Ticket Cost: $" + price);
+        }
     }
 }
