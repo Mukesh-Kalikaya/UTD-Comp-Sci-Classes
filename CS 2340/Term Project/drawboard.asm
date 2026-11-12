@@ -14,6 +14,7 @@ board_newline:  .asciiz "\n"
 .text
                 .globl  draw_board
 draw_board:
+    # The row and column counters are saved because they live in saved registers.
     addiu   $sp,            $sp,                -8
     sw      $s0,            0($sp)
     sw      $s1,            4($sp)
@@ -22,6 +23,7 @@ draw_board:
     li      $v0,            4
     syscall
 
+    # The first line is the column labels and the second line starts the grid.
     la      $a0,            board_indent
     li      $v0,            4
     syscall
@@ -36,6 +38,7 @@ draw_row_loop:
     beq     $t0,            $zero,              draw_board_done
 
     # Print the row number on the left.
+    # The row number is printed before the cells so the text board is easy to follow.
     la      $a0,            board_row_lead
     li      $v0,            4
     syscall
@@ -64,6 +67,7 @@ draw_col_loop:
     addu    $t2,            $t2,                $t1
     lw      $t3,            0($t2)
 
+    # Positive values are human pieces, negative values are computer pieces.
     beq     $t3,            $zero,              draw_empty_cell
     bgtz    $t3,            draw_human_cell
 
@@ -82,6 +86,7 @@ draw_col_loop:
     j       draw_cell_done
 
 draw_comp_two_digits:
+    # Two-digit values need one less padding space to keep the columns lined up.
     la      $a0,            board_pad_two
     li      $v0,            4
     syscall
@@ -108,6 +113,7 @@ draw_human_two_digits:
     j       draw_cell_done
 
 draw_empty_cell:
+    # Empty cells get spaces instead of a player label and number.
     la      $a0,            board_space
     li      $v0,            4
     syscall
@@ -117,6 +123,7 @@ draw_cell_done:
     j       draw_col_loop
 
 draw_row_end:
+    # Close the final cell, then print the border below this row.
     la      $a0,            board_bar
     li      $v0,            4
     syscall
@@ -135,6 +142,7 @@ draw_row_end:
     j       draw_row_loop
 
 draw_board_done:
+    # After the board is finished, the counters are restored before returning.
     lw      $s0,            0($sp)
     lw      $s1,            4($sp)
     addiu   $sp,            $sp,                8

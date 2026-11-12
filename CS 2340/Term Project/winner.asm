@@ -8,6 +8,7 @@ winner_tie:         .asciiz "\nIt is a tie! Both players reached the same highes
 .text
                     .globl  show_winner
 show_winner:
+    # The scan state is saved because this routine uses several saved registers.
     addiu   $sp,                $sp,                -20
     sw      $s0,                0($sp)
     sw      $s1,                4($sp)
@@ -20,6 +21,7 @@ show_winner:
     li      $s2,                0                                                                   # square index
 
 winner_scan_loop:
+    # All 36 squares are scanned while the largest value for each player is tracked.
     slti    $t0,                $s2,                36
     beq     $t0,                $zero,              winner_print_scores
 
@@ -31,6 +33,7 @@ winner_scan_loop:
     bgtz    $s3,                winner_check_human
 
     # Convert the computer's negative value to a positive number.
+    # Comparing positive scores makes the final winner check straightforward.
     subu    $t3,                $zero,              $s3
     ble     $t3,                $s1,                winner_next_square
     move    $s1,                $t3
@@ -45,6 +48,7 @@ winner_next_square:
     j       winner_scan_loop
 
 winner_print_scores:
+    # The scores are printed first so the result shows exactly why someone won.
     la      $a0,                winner_human_label
     li      $v0,                4
     syscall
@@ -78,6 +82,7 @@ winner_print_computer:
     syscall
 
 winner_done:
+    # Restore the registers before giving control back to main.
     lw      $s0,                0($sp)
     lw      $s1,                4($sp)
     lw      $s2,                8($sp)

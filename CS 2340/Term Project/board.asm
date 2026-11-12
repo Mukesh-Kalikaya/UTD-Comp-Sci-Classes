@@ -3,11 +3,13 @@
                 .globl  board
                 .globl  occupied_count
 board:          .space  144                                         # 36 squares * 4 bytes each
+# This count is kept separately so main does not have to scan the board.
 occupied_count: .word   6
 
 .text
                 .globl  initialize_board
 initialize_board:
+    # Every square is cleared first, including values left by an earlier game.
     la      $t0,                board
     li      $t1,                0
     li      $t2,                36
@@ -20,6 +22,7 @@ board_clear_loop:
     j       board_clear_loop
 
 board_set_starts:
+    # The six starting pieces make three human chains and three computer chains.
     la      $t0,                board
 
     # Human starts at the top-left and moves diagonally inward.

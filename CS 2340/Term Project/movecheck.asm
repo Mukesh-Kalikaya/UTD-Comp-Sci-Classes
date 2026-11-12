@@ -1,6 +1,7 @@
 .text
     .globl  has_player_move
 has_player_move:
+    # This helper only answers whether a move exists; it does not change the board.
     addiu   $sp,                        $sp,                    -28
     sw      $s0,                        0($sp)
     sw      $s1,                        4($sp)
@@ -14,6 +15,7 @@ has_player_move:
     li      $s1,                        0                                               # source square index
 
 movecheck_source_loop:
+    # Every square is scanned until one owned by the requested player is found.
     slti    $t0,                        $s1,                    36
     beq     $t0,                        $zero,                  movecheck_no
 
@@ -30,6 +32,7 @@ movecheck_check_human:
     blez    $s2,                        movecheck_next_source
 
 movecheck_check_neighbors:
+    # Once the owner matches, the surrounding 3 by 3 area is searched.
     li      $t0,                        6
     div     $s1,                        $t0
     mflo    $s3                                                                         # source row
@@ -37,6 +40,7 @@ movecheck_check_neighbors:
     li      $s5,                        -1                                              # row change
 
 movecheck_row_loop:
+    # Boundary checks keep candidate rows between zero and five.
     addu    $t0,                        $s3,                    $s5
     bltz    $t0,                        movecheck_next_row
     slti    $t1,                        $t0,                    6
@@ -45,6 +49,7 @@ movecheck_row_loop:
     li      $t7,                        -1                                              # column change
 
 movecheck_col_loop:
+    # Boundary checks do the same thing for candidate columns.
     addu    $t2,                        $s4,                    $t7
     bltz    $t2,                        movecheck_next_col
     slti    $t3,                        $t2,                    6
@@ -79,13 +84,16 @@ movecheck_next_source:
     j       movecheck_source_loop
 
 movecheck_yes:
+    # One empty neighboring square is enough to report that a move exists.
     li      $v0,                        1
     j       movecheck_done
 
 movecheck_no:
+    # Reaching the end means every piece was blocked.
     move    $v0,                        $zero
 
 movecheck_done:
+    # The board stays unchanged while this routine returns 1 or 0 in v0.
     lw      $s0,                        0($sp)
     lw      $s1,                        4($sp)
     lw      $s2,                        8($sp)

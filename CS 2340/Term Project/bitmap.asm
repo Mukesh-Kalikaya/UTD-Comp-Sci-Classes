@@ -1,10 +1,12 @@
 .data   0x10008000
                 .align  2
+# One word is used for every pixel so the bitmap is easy to index.
 bitmap_buffer:  .space  4096                                        # 32 rows * 32 columns * 4 bytes
 
 .text
                 .globl  draw_bitmap
 draw_bitmap:
+    # The whole display is redrawn every time so old pieces do not stay on screen.
     # Clear the entire bitmap to a dark background.
     la      $t0,                bitmap_buffer
     li      $t1,                1024                                # 32 * 32 display units
@@ -17,6 +19,7 @@ bitmap_clear_loop:
     bgtz    $t1,                bitmap_clear_loop
 
     # Visit each square on the 6 by 6 game board.
+    # The board is smaller than the bitmap, so it is placed in the middle.
     li      $t0,                0                                   # board row
 
 bitmap_row_loop:
@@ -32,10 +35,12 @@ bitmap_col_loop:
     addu    $t4,                $t4,                $t3
     lw      $t5,                0($t4)
 
+    # A zero means the square is empty, so the background already looks right.
     beq     $t5,                $zero,              bitmap_next_col
     bgtz    $t5,                bitmap_human_color
 
     # Computer numbers are negative. Make the value positive for the color.
+    # Bigger numbers get a stronger green part while keeping the computer red.
     subu    $t6,                $zero,              $t5
     sll     $t6,                $t6,                2               # number * 4 controls the green shade
     sll     $t6,                $t6,                8
@@ -44,6 +49,7 @@ bitmap_col_loop:
     j       bitmap_color_ready
 
 bitmap_human_color:
+    # Human numbers use the same intensity idea, but the base color is blue.
     sll     $t6,                $t5,                2               # number * 4 controls the green shade
     sll     $t6,                $t6,                8
     li      $t7,                0x000000FF                          # blue human color
@@ -67,6 +73,7 @@ bitmap_color_ready:
     addu    $t9,                $t9,                $t6
 
     # Fill a 2 by 2 block in the center of this game square.
+    # This leaves the grid/background visible around each piece.
     sw      $t7,                0($t9)
     sw      $t7,                4($t9)
     addiu   $t9,                $t9,                128             # move down one display row (32 * 4)

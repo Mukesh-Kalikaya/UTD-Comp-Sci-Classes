@@ -12,6 +12,7 @@ main_comp_pass:     .asciiz "The computer has no valid moves. Its turn is skippe
                     .globl  main
 
 main:
+    # The instructions are shown before starting so the player knows the rules.
     la      $a0,                        main_title
     li      $v0,                        4
     syscall
@@ -25,6 +26,7 @@ main:
     jal     draw_bitmap
 
     # Seed the random number generator with the current time.
+    # Using the time makes the starting player different from game to game.
     li      $v0,                        30
     syscall
     move    $t0,                        $a0
@@ -40,6 +42,7 @@ main:
     syscall
     move    $s0,                        $a0                                                                                                                                                                                                                                                                                                                     # 0 = human turn, 1 = computer turn
     li      $s1,                        0                                                                                                                                                                                                                                                                                                                       # consecutive skipped turns
+    # A pass counter is used to stop the game when neither side can move.
 
     beq     $s0,                        $zero,              main_print_you_first
     la      $a0,                        main_comp_first
@@ -54,6 +57,7 @@ main_print_you_first:
 
 main_game_loop:
     # Stop if all 36 squares are used.
+    # This is the normal end condition when the board fills up.
     lw      $t0,                        occupied_count
     li      $t1,                        36
     bge     $t0,                        $t1,                main_game_over
@@ -62,6 +66,7 @@ main_game_loop:
     j       main_computer_turn_start
 
 main_human_turn_start:
+    # A move is checked for before asking for coordinates, so the player cannot get stuck.
     li      $a0,                        1                                                                                                                                                                                                                                                                                                                       # positive board numbers belong to H
     jal     has_player_move
     beq     $v0,                        $zero,              main_human_pass_turn
@@ -71,6 +76,7 @@ main_human_turn_start:
     syscall
     jal     human_move
 
+    # A successful move fills exactly one more square.
     lw      $t0,                        occupied_count
     addiu   $t0,                        $t0,                1
     sw      $t0,                        occupied_count
@@ -81,6 +87,7 @@ main_human_turn_start:
     j       main_game_loop
 
 main_human_pass_turn:
+    # Turn control still changes after a pass, but the pass counter increases.
     la      $a0,                        main_human_pass
     li      $v0,                        4
     syscall
@@ -91,6 +98,7 @@ main_human_pass_turn:
     j       main_game_loop
 
 main_computer_turn_start:
+    # The computer uses the same move-availability check as the human player.
     li      $a0,                        -1                                                                                                                                                                                                                                                                                                                      # negative board numbers belong to C
     jal     has_player_move
     beq     $v0,                        $zero,              main_computer_pass_turn
@@ -111,6 +119,7 @@ main_computer_turn_start:
     j       main_game_loop
 
 main_computer_pass_turn:
+    # Two consecutive passes mean the board cannot make progress anymore.
     la      $a0,                        main_comp_pass
     li      $v0,                        4
     syscall
@@ -121,6 +130,7 @@ main_computer_pass_turn:
     j       main_game_loop
 
 main_game_over:
+    # Winner scanning happens only after the game-ending condition is reached.
     jal     show_winner
     li      $v0,                        10
     syscall

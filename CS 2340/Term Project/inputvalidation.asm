@@ -9,6 +9,7 @@ human_good_move_message:    .asciiz "Move accepted.\n"
 .text
                             .globl  human_move
 human_move:
+    # All four coordinates and the source value are kept in saved registers.
     addiu   $sp,                $sp,                        -24
     sw      $s0,                0($sp)
     sw      $s1,                4($sp)
@@ -18,6 +19,7 @@ human_move:
     sw      $ra,                20($sp)
 
 human_move_retry:
+    # Invalid input jumps back here so the player gets another complete attempt.
     la      $a0,                human_source_row_prompt
     li      $v0,                4
     syscall
@@ -47,6 +49,7 @@ human_move_retry:
     move    $s3,                $v0
 
     # Check all four coordinates before using them as array positions.
+    # This prevents a bad user coordinate from creating an invalid board address.
     blt     $s0,                1,                          human_move_invalid
     bgt     $s0,                6,                          human_move_invalid
     blt     $s1,                1,                          human_move_invalid
@@ -63,6 +66,7 @@ human_move_retry:
     addiu   $s3,                $s3,                        -1
 
     # Find the source square and make sure it belongs to the human player.
+    # Board values above zero are the human player's chain numbers.
     li      $t0,                6
     mul     $t1,                $s0,                        $t0
     addu    $t1,                $t1,                        $s1
@@ -82,6 +86,7 @@ human_move_retry:
     bne     $t7,                $zero,                      human_move_invalid
 
     # The source and destination must be next to each other.
+    # Each coordinate is compared separately, allowing horizontal, vertical, and diagonal moves.
     subu    $t0,                $s0,                        $s2
     bgez    $t0,                human_row_difference_ready
     subu    $t0,                $zero,                      $t0
@@ -97,6 +102,7 @@ human_col_difference_ready:
     beq     $t1,                $zero,                      human_move_invalid
 
     # Add the next number to the chosen empty square.
+    # The old source stays in place because a move extends a chain instead of moving it.
     addiu   $t0,                $s4,                        1
     sw      $t0,                0($t5)
 
@@ -106,12 +112,14 @@ human_col_difference_ready:
     j       human_move_done
 
 human_move_invalid:
+    # All failed checks use the same message and retry path.
     la      $a0,                human_bad_move_message
     li      $v0,                4
     syscall
     j       human_move_retry
 
 human_move_done:
+    # The move is complete, so the caller's saved registers are restored.
     lw      $s0,                0($sp)
     lw      $s1,                4($sp)
     lw      $s2,                8($sp)
